@@ -14,13 +14,13 @@ WARNING: fs/jfs/jfs_dmap.c:2962 at dbAdjTree+0x315/0x410 fs/jfs/jfs_dmap.c:2962,
 RIP: 0010:dbAdjTree+0x315/0x410 fs/jfs/jfs_dmap.c:2962
 ```
 
-`dbAdjTree()` (fs/jfs/jfs_dmap.c) adjusts the dmap control tree for a leaf
-index; the `WARN_ON_ONCE(lp >= size || lp < 0)` fired because the computed
-leaf index (`lp = leafno + tp->dmt_leafidx`) fell outside the tree — the
-crafted JFS image's block-allocation state drove an out-of-range leaf
-index into the tree adjustment. The commit runs on the `jfsCommit`
-kernel thread. The guest runs with `panic_on_warn=1`, which escalates
-this warning to a kernel panic.
+`dbAdjTree()` (fs/jfs/jfs_dmap.c) adjusts the dmap tree for a leaf index.
+The `WARN_ON_ONCE(lp >= size || lp < 0)` check was triggered because the
+computed index (`lp = leafno + le32_to_cpu(tp->dmt_leafidx)`) was outside
+the valid tree bounds. This may be related to inconsistent JFS block-map
+metadata. The warning occurred in the `jfsCommit` kernel thread. The
+guest runs with `panic_on_warn=1`, which escalates this warning to a
+kernel panic.
 
 ## How to reproduce
 
@@ -29,37 +29,41 @@ built from v7.4-rc2 with CONFIG_KASAN=y, CONFIG_JFS_FS=y, booted with
 `oops=panic` and `panic_on_warn=1`. See `environment.txt` for the exact
 QEMU command line and `kernel.config` for the configuration.
 
-The crash depends on JFS block-allocation state built up by the preceding
-programs, so the reproducer is an ordered program set (75 programs):
+The crash depends on JFS state built up by preceding programs. The
+reproducer is a multi-program syzkaller execution log (76 programs,
+including `syz_mount_image$jfs` calls and allocation-heavy operations):
 
 ```sh
 # in the guest, as root:
 syz-execprog -procs=8 -threaded -repeat=0 -executor ./syz-executor repro.kernsight.prog
 ```
 
-Verified twice: (1) by the fuzzing pipeline's reproducer machinery on a
-fresh VM (reproducer pipeline outcome: confirmed=true, status=verified);
-(2) by an external standalone chunked-replay run on a fresh VM — the
-warning fired 268.7 seconds after guest boot and panic_on_warn escalated
-it to a kernel panic (full console: `logs/external-verification/
-external-verification-serial.log`). A C reproducer has not been included
-yet; it will be added once syzkaller's C-repro stage passes for this bug.
+The programs are replayed repeatedly with 8 parallel workers (`-repeat=0`);
+the execution order is not guaranteed to be strictly serial. The precise
+triggering operation and required filesystem state have not yet been
+isolated.
+
+Verified by the fuzzing pipeline's reproducer machinery on a fresh VM
+(reproducer pipeline outcome: confirmed=true, status=verified). A C
+reproducer has not been included yet; it will be added once syzkaller's
+C-repro stage passes for this bug.
 
 ## Files
 
 - `kernel.config` — kernel configuration used (also required to interpret addresses)
 - `environment.txt` — kernel image info (sha256), QEMU command line, syzkaller commit, reproducer command
-- `reproducer/repro.kernsight.prog` — pipeline-verified reproducer (75-program ordered set + triggering testcase)
-- `reproducer/repro.prog` — minimal triggering testcase (state-dependent; does not reproduce alone)
+- `reproducer/repro.kernsight.prog` — pipeline-verified reproducer (76-program multi-program execution log)
+- `reproducer/repro.prog` — candidate testcase extracted from the reproduction pipeline; not confirmed as the trigger
 - `reproducer/repro.priming.prog` — state-priming program set (pipeline repro recipe)
 - `logs/log-*.txt`, `logs/report-*.txt` — original syzkaller execution logs and crash reports from the fuzzing pipeline
 - `logs/machineInfo-*.txt`, `logs/title-stat.json` — guest environment info and title statistics
 
 ## Notes for maintainers
 
-- The out-of-range leaf index comes from the block-allocation state built
-  on the crafted image (`syz_mount_image$jfs` + allocation-heavy
-  operations); bounding the leaf index computation against the tree size
-  is the natural first check.
+- The out-of-range leaf index (`lp = leafno + le32_to_cpu(tp->dmt_leafidx)`)
+  comes from the block-allocation state built on the crafted image. The
+  `WARN_ON_ONCE` at fs/jfs/jfs_dmap.c:2962 is the existing check; the
+  underlying cause of the inconsistent metadata that produces the
+  out-of-range index has not been isolated.
 - We can provide the kernel image, additional crash instances or raw
   artifacts on request.
