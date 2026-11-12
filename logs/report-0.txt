@@ -1,0 +1,124 @@
+------------[ cut here ]------------
+lp >= size || lp < 0
+WARNING: fs/jfs/jfs_dmap.c:2962 at dbAdjTree+0x315/0x410 fs/jfs/jfs_dmap.c:2962, CPU#3: jfsCommit/130
+Modules linked in:
+CPU: 3 UID: 0 PID: 130 Comm: jfsCommit Tainted: G             L      7.4.0-rc2-kernsight-kasan #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+RIP: 0010:dbAdjTree+0x315/0x410 fs/jfs/jfs_dmap.c:2962
+Code: e8 a0 5e 4e fe 0f b6 14 24 38 da 0f 85 89 fe ff ff 48 83 c4 18 5b 5d 41 5c 41 5d 41 5e 41 5f e9 91 65 4e fe e8 8c 65 4e fe 90 <0f> 0b 90 eb e2 e8 b1 28 d6 fe e9 20 fe ff ff e8 a7 28 d6 fe e9 47
+RSP: 0018:ffa00000032f7558 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000356 RCX: 0000000000000000
+RDX: ff11000103fd2640 RSI: ffffffff837bcce4 RDI: 0000000000000004
+RBP: ff11000124445010 R08: ffffffff837bca55 R09: 0000000000000356
+R10: ffd4000004911147 R11: 0000000000000000 R12: 0000000000000155
+R13: 0000000000000356 R14: 0000000000000004 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ff1100020dd1e000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000560f391a8020 CR3: 000000014dde4000 CR4: 0000000000753ef0
+PKRU: 55555554
+Call Trace:
+ <TASK>
+ dbJoin+0x248/0x2b0 fs/jfs/jfs_dmap.c:2930
+ dbFreeBits+0x165/0x8e0 fs/jfs/jfs_dmap.c:2427
+ dbFreeDmap+0x68/0x1d0 fs/jfs/jfs_dmap.c:2176
+ dbFree+0x256/0x560 fs/jfs/jfs_dmap.c:485
+ txFreeMap+0x76a/0xe60 fs/jfs/jfs_txnmgr.c:2517
+ xtTruncate+0x1fa3/0x28d0 fs/jfs/jfs_xtree.c:2481
+ jfs_free_zero_link+0x35c/0x4c0 fs/jfs/namei.c:760
+ jfs_evict_inode+0x427/0x4c0 fs/jfs/inode.c:159
+ evict+0x3a6/0xa90 fs/inode.c:821
+ iput_final fs/inode.c:2025 [inline]
+ iput.part.0+0x949/0x1060 fs/inode.c:2074
+ iput+0x35/0x40 fs/inode.c:2040
+ txUpdateMap+0x980/0xb60 fs/jfs/jfs_txnmgr.c:2369
+ txLazyCommit fs/jfs/jfs_txnmgr.c:2666 [inline]
+ jfs_lazycommit+0x5dd/0xb20 fs/jfs/jfs_txnmgr.c:2735
+ kthread+0x395/0x4a0 kernel/kthread.c:436
+ ret_from_fork+0xb11/0xdb0 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+ </TASK>
+
+<<<<<<<<<<<<<<< tail report >>>>>>>>>>>>>>>
+
+Modules linked in:
+CPU: 3 UID: 0 PID: 130 Comm: jfsCommit Tainted: G             L      7.4.0-rc2-kernsight-kasan #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+RIP: 0010:dbAdjTree+0x315/0x410
+Code: e8 a0 5e 4e fe 0f b6 14 24 38 da 0f 85 89 fe ff ff 48 83 c4 18 5b 5d 41 5c 41 5d 41 5e 41 5f e9 91 65 4e fe e8 8c 65 4e fe 90 <0f> 0b 90 eb e2 e8 b1 28 d6 fe e9 20 fe ff ff e8 a7 28 d6 fe e9 47
+RSP: 0018:ffa00000032f7558 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000356 RCX: 0000000000000000
+RDX: ff11000103fd2640 RSI: ffffffff837bcce4 RDI: 0000000000000004
+RBP: ff11000124445010 R08: ffffffff837bca55 R09: 0000000000000356
+R10: ffd4000004911147 R11: 0000000000000000 R12: 0000000000000155
+R13: 0000000000000356 R14: 0000000000000004 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ff1100020dd1e000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000560f391a8020 CR3: 000000014dde4000 CR4: 0000000000753ef0
+PKRU: 55555554
+Call Trace:
+ <TASK>
+ dbJoin+0x248/0x2b0
+ dbFreeBits+0x165/0x8e0
+ dbFreeDmap+0x68/0x1d0
+ dbFree+0x256/0x560
+ txFreeMap+0x76a/0xe60
+ xtTruncate+0x1fa3/0x28d0
+ jfs_free_zero_link+0x35c/0x4c0
+ jfs_evict_inode+0x427/0x4c0
+ evict+0x3a6/0xa90
+ iput.part.0+0x949/0x1060
+ iput+0x35/0x40
+ txUpdateMap+0x980/0xb60
+ jfs_lazycommit+0x5dd/0xb20
+ kthread+0x395/0x4a0
+ ret_from_fork+0xb11/0xdb0
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+Kernel panic - not syncing: kernel: panic_on_warn set ...
+CPU: 3 UID: 0 PID: 130 Comm: jfsCommit Tainted: G             L      7.4.0-rc2-kernsight-kasan #1 PREEMPT(full) 
+Tainted: [L]=SOFTLOCKUP
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 04/01/2014
+Call Trace:
+ <TASK>
+ dump_stack_lvl+0x3d/0x1b0
+ vpanic+0x726/0x7f0
+ panic+0xc7/0xd0
+ check_panic_on_warn+0xb6/0xc0
+ __warn+0x10d/0x400
+ __report_bug+0x4aa/0x5a0
+ report_bug+0xb3/0x210
+ handle_bug+0x2d7/0x4e0
+ exc_invalid_op+0x35/0x80
+ asm_exc_invalid_op+0x1a/0x20
+RIP: 0010:dbAdjTree+0x315/0x410
+Code: e8 a0 5e 4e fe 0f b6 14 24 38 da 0f 85 89 fe ff ff 48 83 c4 18 5b 5d 41 5c 41 5d 41 5e 41 5f e9 91 65 4e fe e8 8c 65 4e fe 90 <0f> 0b 90 eb e2 e8 b1 28 d6 fe e9 20 fe ff ff e8 a7 28 d6 fe e9 47
+RSP: 0018:ffa00000032f7558 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000356 RCX: 0000000000000000
+RDX: ff11000103fd2640 RSI: ffffffff837bcce4 RDI: 0000000000000004
+RBP: ff11000124445010 R08: ffffffff837bca55 R09: 0000000000000356
+R10: ffd4000004911147 R11: 0000000000000000 R12: 0000000000000155
+R13: 0000000000000356 R14: 0000000000000004 R15: 0000000000000000
+ dbJoin+0x248/0x2b0
+ dbFreeBits+0x165/0x8e0
+ dbFreeDmap+0x68/0x1d0
+ dbFree+0x256/0x560
+ txFreeMap+0x76a/0xe60
+ xtTruncate+0x1fa3/0x28d0
+ jfs_free_zero_link+0x35c/0x4c0
+ jfs_evict_inode+0x427/0x4c0
+ evict+0x3a6/0xa90
+ iput.part.0+0x949/0x1060
+ iput+0x35/0x40
+ txUpdateMap+0x980/0xb60
+ jfs_lazycommit+0x5dd/0xb20
+ kthread+0x395/0x4a0
+ ret_from_fork+0xb11/0xdb0
+ ret_from_fork_asm+0x1a/0x30
+ </TASK>
+Kernel Offset: disabled
+Rebooting in 86400 seconds..
+
+<<<<<<<<<<<<<<< tail report >>>>>>>>>>>>>>>
+
